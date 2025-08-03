@@ -4,22 +4,50 @@ import pandas as pd
 from datetime import datetime
 from pytz import timezone
 import traceback
+import sys
+import os
 
-# Import all function modules
-from data_processing import fetch_option_chain_data, is_market_open
-from expiry_analysis import is_expiry_day, handle_expiry_day_analysis, display_expiry_signals, display_expiry_option_chain
-from regular_analysis import handle_regular_trading_analysis, handle_reversal_analysis, handle_liquidity_zones
-from ui_components import display_enhanced_trade_log, handle_export_data, display_call_log_book, auto_update_call_log
-from telegram_notifications import send_telegram_message
-from google_sheets_integration import (
-    log_analysis_data, log_trade_data, generate_daily_summary, 
-    should_log_analysis, should_generate_daily_summary, test_google_sheets_connection
-)
+# Add current directory to Python path to find local modules
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
 
-# Import new feature modules
-from trade_simulator import render_trade_simulator
-from telegram_interactive_bot import render_telegram_interactive_bot, send_trade_for_confirmation
-from sentiment_analysis import render_sentiment_analysis, get_current_sentiment_score
+# Now import local modules (these should work if files are in same directory)
+try:
+    from data_processing import fetch_option_chain_data, is_market_open
+    from expiry_analysis import is_expiry_day, handle_expiry_day_analysis, display_expiry_signals, display_expiry_option_chain
+    from regular_analysis import handle_regular_trading_analysis, handle_reversal_analysis, handle_liquidity_zones
+    from ui_components import display_enhanced_trade_log, handle_export_data, display_call_log_book, auto_update_call_log
+    from telegram_notifications import send_telegram_message
+    from google_sheets_integration import (
+        log_analysis_data, log_trade_data, generate_daily_summary, 
+        should_log_analysis, should_generate_daily_summary, test_google_sheets_connection
+    )
+    
+    # Import new feature modules
+    from trade_simulator import render_trade_simulator
+    from telegram_interactive_bot import render_telegram_interactive_bot, send_trade_for_confirmation
+    from sentiment_analysis import render_sentiment_analysis, get_current_sentiment_score
+    
+    IMPORTS_SUCCESS = True
+    
+except ImportError as e:
+    st.error(f"❌ Import Error: {str(e)}")
+    st.error("🔍 Please ensure all required files are in the same directory as main_app.py")
+    st.info("""
+    **Required files in same directory:**
+    - data_processing.py
+    - analysis_functions.py  
+    - expiry_analysis.py
+    - regular_analysis.py
+    - ui_components.py
+    - telegram_notifications.py
+    - google_sheets_integration.py
+    - trade_simulator.py
+    - telegram_interactive_bot.py
+    - sentiment_analysis.py
+    """)
+    IMPORTS_SUCCESS = False
 
 def initialize_streamlit_config():
     """Initialize Streamlit configuration and session states"""
@@ -150,7 +178,7 @@ def setup_system_status_sidebar():
         st.header("🔧 System Status")
         
         # Market Status
-        if is_market_open():
+        if IMPORTS_SUCCESS and is_market_open():
             st.success("🟢 Market: Open")
         else:
             st.info("🔴 Market: Closed")
@@ -165,6 +193,12 @@ def setup_system_status_sidebar():
         # Feature Status
         st.markdown("**📱 Features:**")
         
+        # Import Status
+        if IMPORTS_SUCCESS:
+            st.caption("🟢 All modules loaded")
+        else:
+            st.caption("🔴 Module import errors")
+        
         # Telegram Bot Status
         bot_active = st.session_state.get('bot_active', False)
         bot_status = "🟢 Active" if bot_active else "🔴 Inactive"
@@ -175,16 +209,15 @@ def setup_system_status_sidebar():
         sentiment_status = "🟢 Updated" if has_sentiment_data else "🟡 No Data"
         st.caption(f"Sentiment: {sentiment_status}")
         
-        # Trade Simulator Status
-        simulated_trades = len(st.session_state.get('simulated_trades', []))
-        st.caption(f"Simulations: {simulated_trades} runs")
-        
         # Last Update
         if st.session_state.last_update_time:
             st.caption(f"Last update: {st.session_state.last_update_time}")
 
 def setup_google_sheets_controls():
     """Setup Google Sheets controls in sidebar"""
+    if not IMPORTS_SUCCESS:
+        return
+        
     with st.sidebar:
         st.markdown("---")
         st.header("📊 Google Sheets")
@@ -241,81 +274,13 @@ def handle_manual_summary():
     else:
         st.error("❌ Summary generation failed!")
 
-def enhanced_trade_logging_with_confirmation(trade_entry, market_view, total_score, support_zone, resistance_zone):
-    """Enhanced trade logging with Telegram confirmation"""
-    now = datetime.now(timezone("Asia/Kolkata"))
-    
-    # Enhanced trade entry with full context
-    enhanced_trade = trade_entry.copy()
-    enhanced_trade.update({
-        "Time": now.isoformat(),
-        "Timestamp": now.strftime("%Y-%m-%d %H:%M:%S"),
-        "Market_View": market_view,
-        "Bias_Score": total_score,
-        "Support_Zone": f"{support_zone[0]}-{support_zone[1]}" if all(support_zone) else "",
-        "Resistance_Zone": f"{resistance_zone[0]}-{resistance_zone[1]}" if all(resistance_zone) else "",
-        "Sentiment_Score": get_current_sentiment_score(),
-        "Signal_Type": "Regular",
-        "Notes": "Auto-generated signal with sentiment analysis"
-    })
-    
-    # Check if Telegram bot is active for confirmation
-    if st.session_state.get('bot_active', False):
-        # Send for Telegram confirmation
-        trade_id = send_trade_for_confirmation(enhanced_trade)
-        st.info(f"📱 Trade sent for Telegram confirmation (ID: {trade_id})")
-    else:
-        # Direct logging (existing behavior)
-        st.session_state.trade_log.append(enhanced_trade)
-        success = log_trade_data(enhanced_trade)
-        if success:
-            st.success("✅ Trade logged to Google Sheets!")
-        else:
-            st.warning("⚠️ Trade logged locally (Google Sheets failed)")
-
-def automated_logging_check(df_summary, underlying, market_view, total_score, support_zone, resistance_zone, signal_generated):
-    """Enhanced automated logging with sentiment integration"""
-    now = datetime.now(timezone("Asia/Kolkata"))
-    
-    # Get current sentiment for enhanced context
-    sentiment_score = get_current_sentiment_score()
-    
-    # Store latest analysis data with sentiment
-    st.session_state.last_analysis_data = {
-        'df_summary': df_summary,
-        'underlying': underlying,
-        'market_view': market_view,
-        'total_score': total_score,
-        'support_zone': support_zone,
-        'resistance_zone': resistance_zone,
-        'signal_generated': signal_generated,
-        'sentiment_score': sentiment_score
-    }
-    
-    # 15-minute analysis logging with sentiment data
-    if should_log_analysis():
-        if (not st.session_state.last_analysis_log or 
-            (now - datetime.fromisoformat(st.session_state.last_analysis_log)).total_seconds() > 840):
-            
-            success = log_analysis_data(df_summary, underlying, market_view, total_score, 
-                                      support_zone, resistance_zone, signal_generated)
-            if success:
-                st.session_state.last_analysis_log = now.isoformat()
-                st.info("📊 Analysis logged with sentiment data (15min interval)")
-    
-    # Daily summary generation
-    if should_generate_daily_summary():
-        today_str = now.strftime("%Y-%m-%d")
-        if (not st.session_state.last_daily_summary or 
-            not st.session_state.last_daily_summary.startswith(today_str)):
-            
-            success = generate_daily_summary()
-            if success:
-                st.session_state.last_daily_summary = now.isoformat()
-                st.success("📋 Daily summary generated!")
-
 def render_analysis_page():
     """Render the main analysis page"""
+    if not IMPORTS_SUCCESS:
+        st.error("❌ Cannot run analysis - missing required modules")
+        st.info("Please ensure all Python files are in the same directory")
+        return
+        
     if not is_market_open():
         st.warning("📴 Market is closed. Take rest and recharge! 🎯")
         st.info("Market hours: 9:00 AM - 6:40 PM IST, Monday-Friday")
@@ -387,7 +352,7 @@ def render_analysis_page():
             pass  # Don't let Telegram errors break the flow
 
 def handle_expiry_day_logic(data, expiry, underlying, prev_close, now):
-    """Handle expiry day analysis logic with sentiment integration"""
+    """Handle expiry day analysis logic"""
     df, expiry_signals = handle_expiry_day_analysis(data, expiry, underlying, prev_close, now)
     
     # Display results with sentiment
@@ -395,40 +360,10 @@ def handle_expiry_day_logic(data, expiry, underlying, prev_close, now):
     display_expiry_signals(expiry_signals, underlying, now)
     display_expiry_option_chain(df)
     
-    # Enhanced logging for expiry signals
-    signal_generated = "No"
-    if expiry_signals:
-        signal_generated = f"Expiry-{len(expiry_signals)}"
-        for signal in expiry_signals:
-            enhanced_trade = {
-                "Time": now.isoformat(),
-                "Timestamp": now.strftime("%Y-%m-%d %H:%M:%S"),
-                "Strike": signal['strike'],
-                "Type": 'CE' if 'CALL' in signal['type'] else 'PE',
-                "LTP": signal['ltp'],
-                "Target": signal['target'],
-                "SL": round(signal['ltp'] * 0.8, 2),
-                "Market_View": "Expiry Day",
-                "Bias_Score": signal['score'],
-                "Sentiment_Score": get_current_sentiment_score(),
-                "Signal_Type": "Expiry",
-                "Notes": signal['reason']
-            }
-            
-            # Use confirmation if bot is active
-            if st.session_state.get('bot_active', False):
-                send_trade_for_confirmation(enhanced_trade)
-            else:
-                log_trade_data(enhanced_trade)
-    
-    # Automated logging for expiry day
-    df_summary = pd.DataFrame([{"Strike": "Expiry", "Zone": "ATM", "BiasScore": 0, "Verdict": "Expiry Day"}])
-    automated_logging_check(df_summary, underlying, "Expiry Day", 0, (None, None), (None, None), signal_generated)
-    
-    return signal_generated
+    return "Expiry Day Analysis Complete"
 
 def handle_regular_day_logic(data, expiry, underlying, T, r, now):
-    """Handle regular trading day analysis logic with sentiment integration"""
+    """Handle regular trading day analysis logic"""
     # Main analysis
     df, bias_results, total_score, market_view, suggested_trade, signal_sent = handle_regular_trading_analysis(
         data, expiry, underlying, T, r, now
@@ -442,10 +377,10 @@ def handle_regular_day_logic(data, expiry, underlying, T, r, now):
     support_zone = st.session_state.get('support_zone', (None, None))
     resistance_zone = st.session_state.get('resistance_zone', (None, None))
     
-    # Render results with enhanced header (includes sentiment)
+    # Render results with enhanced header
     render_sticky_header_with_sentiment(underlying, market_view, total_score)
     
-    # Support/Resistance in columns
+    # Support/Resistance display
     col1, col2 = st.columns(2)
     
     with col1:
@@ -456,9 +391,8 @@ def handle_regular_day_logic(data, expiry, underlying, T, r, now):
         resistance_str = f"{resistance_zone[0]} to {resistance_zone[1]}" if all(resistance_zone) else "N/A"
         st.error(f"🚧 **Resistance Zone**: `{resistance_str}`")
     
-    # Trade suggestion with enhanced styling
+    # Trade suggestion
     if suggested_trade:
-        # Get sentiment-based context
         sentiment_score = get_current_sentiment_score()
         sentiment_context = ""
         
@@ -471,102 +405,20 @@ def handle_regular_day_logic(data, expiry, underlying, T, r, now):
         
         st.info(f"🎯 **Trading Signal**\n\n{suggested_trade}\n\n{sentiment_context}")
     
-    # Display price chart
-    from ui_components import plot_price_with_sr
-    plot_price_with_sr()
-    
-    # Create summary dataframe
-    df_summary = pd.DataFrame(bias_results)
-    
-    # Display option chain in expandable section
-    with st.expander("📊 Option Chain Summary", expanded=False):
-        st.dataframe(df_summary, use_container_width=True)
-    
-    # Enhanced trade logging if signal was generated
-    signal_generated = "No"
-    if signal_sent and st.session_state.trade_log:
-        signal_generated = "Regular-1"
-        last_trade = st.session_state.trade_log[-1]
-        
-        # Use enhanced logging with confirmation
-        enhanced_trade_logging_with_confirmation(
-            last_trade, market_view, total_score, support_zone, resistance_zone
-        )
-    
-    # Additional analysis sections
-    atm_strike = min(df['strikePrice'], key=lambda x: abs(x - underlying)) if not df.empty else None
-    
-    if atm_strike:
-        # Reversal analysis
-        handle_reversal_analysis(df, atm_strike, underlying, now)
-        
-        # Liquidity zones
-        handle_liquidity_zones(df, underlying)
-    
-    # Enhanced features
-    display_enhanced_features(df_summary, underlying)
-    
-    # Automated logging with sentiment
-    automated_logging_check(df_summary, underlying, market_view, total_score, 
-                          support_zone, resistance_zone, signal_generated)
-    
-    return signal_generated
-
-def display_enhanced_features(df_summary, underlying):
-    """Display enhanced features section with better organization"""
-    st.markdown("---")
-    st.markdown("## 📈 Enhanced Features")
-    
-    # Create tabs for better organization
-    tab1, tab2, tab3, tab4 = st.tabs(["📜 Trade Log", "📥 Export", "📚 Call Log", "🎯 Quick Actions"])
-    
-    with tab1:
-        display_enhanced_trade_log()
-    
-    with tab2:
-        st.markdown("### Data Export Options")
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            if st.button("📄 Prepare Excel Export", use_container_width=True):
-                st.session_state.export_data = True
-        
-        with col2:
-            if st.button("📊 Open Google Sheets", use_container_width=True):
-                st.info("Check your Google Drive for 'Nifty Options Analysis' spreadsheet")
-        
-        handle_export_data(df_summary, underlying)
-    
-    with tab3:
-        display_call_log_book()
-    
-    with tab4:
-        st.markdown("### 🎯 Quick Actions")
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            if st.button("🚀 Run Simulation", use_container_width=True):
-                st.session_state.current_page = "Simulator"
-                st.experimental_rerun()
-        
-        with col2:
-            if st.button("🤖 Check Bot", use_container_width=True):
-                st.session_state.current_page = "Bot"
-                st.experimental_rerun()
-        
-        with col3:
-            if st.button("📰 View Sentiment", use_container_width=True):
-                st.session_state.current_page = "Sentiment"
-                st.experimental_rerun()
-    
-    # Auto update call log
-    auto_update_call_log(underlying)
+    return "Regular Analysis Complete"
 
 def main():
-    """Main application entry point with comprehensive features"""
+    """Main application entry point"""
     try:
         # Initialize configuration
         initialize_streamlit_config()
+        
+        # Check if imports were successful
+        if not IMPORTS_SUCCESS:
+            st.title("❌ Nifty Options Analyzer - Import Error")
+            st.error("The application cannot start due to missing modules.")
+            st.info("Please ensure all required Python files are in the same directory as main_app.py")
+            return
         
         # Render navigation and get current page
         current_page = render_navigation()
@@ -586,15 +438,24 @@ def main():
             
         elif current_page == "Simulator":
             st.title("🚀 Trade Simulator")
-            render_trade_simulator()
+            if IMPORTS_SUCCESS:
+                render_trade_simulator()
+            else:
+                st.error("❌ Trade Simulator unavailable - missing modules")
             
         elif current_page == "Bot":
             st.title("🤖 Telegram Interactive Bot")
-            render_telegram_interactive_bot()
+            if IMPORTS_SUCCESS:
+                render_telegram_interactive_bot()
+            else:
+                st.error("❌ Telegram Bot unavailable - missing modules")
             
         elif current_page == "Sentiment":
             st.title("📰 Market Sentiment Analysis")
-            render_sentiment_analysis()
+            if IMPORTS_SUCCESS:
+                render_sentiment_analysis()
+            else:
+                st.error("❌ Sentiment Analysis unavailable - missing modules")
         
     except Exception as e:
         st.error("❌ Critical application error occurred")
@@ -602,13 +463,6 @@ def main():
         # Show error details in expander for debugging
         with st.expander("🔍 Error Details", expanded=False):
             st.code(traceback.format_exc())
-        
-        # Send error to Telegram
-        try:
-            error_msg = f"❌ Critical App Error:\n{traceback.format_exc()}"
-            send_telegram_message(error_msg)
-        except:
-            pass
         
         # Provide recovery options
         st.info("🔄 Try refreshing the page or check your internet connection")
