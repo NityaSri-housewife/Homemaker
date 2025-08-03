@@ -1,0 +1,206 @@
+# ===============================================
+# SECURITY - API Keys & Secrets (MOST IMPORTANT)
+# ===============================================
+.streamlit/secrets.toml
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+secrets.json
+config.json
+api_keys.txt
+credentials.txt
+
+# ===============================================
+# PYTHON
+# ===============================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# ===============================================
+# STREAMLIT SPECIFIC
+# ===============================================
+.streamlit/config.toml
+.streamlit/credentials.toml
+
+# ===============================================
+# JUPYTER NOTEBOOK
+# ===============================================
+.ipynb_checkpoints
+*.ipynb
+
+# ===============================================
+# IDE & EDITORS
+# ===============================================
+# VS Code
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# ===============================================
+# OPERATING SYSTEM
+# ===============================================
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ===============================================
+# LOGS & TEMPORARY FILES
+# ===============================================
+*.log
+*.tmp
+*.temp
+logs/
+temp/
+tmp/
+
+# ===============================================
+# DATA & OUTPUT FILES
+# ===============================================
+# Trading data (sensitive)
+trades.csv
+portfolio.csv
+account_data.csv
+trading_history.csv
+
+# Excel exports (may contain sensitive data)
+nifty_analysis_*.xlsx
+trade_reports*.xlsx
+option_chain_*.csv
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# ===============================================
+# DEVELOPMENT & TESTING
+# ===============================================
+# Test files
+test_*.py
+*_test.py
+test/
+tests/
+
+# Local development
+local_config.py
+dev_settings.py
+debug.py
+
+# ===============================================
+# DOCUMENTATION BUILD
+# ===============================================
+docs/_build/
+site/
+
+# ===============================================
+# CUSTOM PROJECT SPECIFIC
+# ===============================================
+# Add any project-specific files here
+screenshots/
+demo_data/
+sample_outputs/
