@@ -1,0 +1,231 @@
+# requirements.txt
+streamlit>=1.28.0
+streamlit-autorefresh>=0.0.1
+requests>=2.31.0
+pandas>=2.0.0
+numpy>=1.24.0
+scipy>=1.10.0
+pytz>=2023.3
+plotly>=5.15.0
+openpyxl>=3.1.0
+
+# .gitignore
+# Streamlit secrets and environment files
+.streamlit/secrets.toml
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Streamlit
+.streamlit/config.toml
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Local testing files
+test_*.py
+*_test.py
+
+---
+
+# .streamlit/secrets.toml.example
+# Copy this file to .streamlit/secrets.toml and fill in your actual credentials
+# DO NOT commit the actual secrets.toml file to GitHub
+
+[telegram]
+bot_token = "YOUR_BOT_TOKEN_HERE"
+chat_id = "YOUR_CHAT_ID_HERE"
+
+# Future API credentials (for Dhan API when you add it)
+[dhan]
+api_key = "YOUR_DHAN_API_KEY"
+api_secret = "YOUR_DHAN_API_SECRET"
+client_id = "YOUR_DHAN_CLIENT_ID"
+
+---
+
+# setup_instructions.md
+
+# Nifty Options Analyzer - Secure Setup Guide
+
+## 🔐 Security-First Setup
+
+### 1. **Clone/Download Project**
+```bash
+git clone your-repo-url
+cd nifty-options-analyzer
+```
+
+### 2. **Create Virtual Environment**
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+### 3. **Install Dependencies**
+```bash
+pip install -r requirements.txt
+```
+
+### 4. **Setup Secrets (IMPORTANT)**
+
+#### For Local Development:
+```bash
+# Create streamlit secrets directory
+mkdir .streamlit
+
+# Copy example file
+cp .streamlit/secrets.toml.example .streamlit/secrets.toml
+
+# Edit with your actual credentials
+nano .streamlit/secrets.toml  # or use any text editor
+```
+
+#### Your `.streamlit/secrets.toml` should look like:
+```toml
+[telegram]
+bot_token = "8133685842:AAGdHCpi9QRIsS-fWW5Y1ArgKJvS95QL9xU"
+chat_id = "5704496584"
+```
+
+### 5. **Verify .gitignore**
+Make sure `.streamlit/secrets.toml` is in your `.gitignore` file!
+
+### 6. **Test Setup**
+```bash
+streamlit run main_app.py
+```
+
+### 7. **Test Telegram Connection**
+- Use the sidebar "Test Telegram Connection" button
+- Should show ✅ success message
+
+## 🚀 Deployment to Streamlit Cloud
+
+### 1. **Push to GitHub**
+```bash
+git add .
+git commit -m "Add secure Nifty Options Analyzer"
+git push origin main
+```
+
+### 2. **Deploy on Streamlit Cloud**
+1. Go to https://share.streamlit.io/
+2. Connect your GitHub repository
+3. Select `main_app.py` as main file
+
+### 3. **Add Secrets in Streamlit Cloud**
+1. In your app dashboard, click "Settings"
+2. Go to "Secrets" tab
+3. Add this content:
+```toml
+[telegram]
+bot_token = "8133685842:AAGdHCpi9QRIsS-fWW5Y1ArgKJvS95QL9xU"
+chat_id = "5704496584"
+```
+4. Click "Save"
+
+## 📁 Final Project Structure
+```
+nifty-options-analyzer/
+├── main_app.py                      # Main application
+├── data_processing.py               # Data fetching
+├── analysis_functions.py            # Analysis logic
+├── telegram_notifications.py        # Secure notifications ✅
+├── ui_components.py                # UI components
+├── expiry_analysis.py              # Expiry day logic
+├── regular_analysis.py             # Regular day logic
+├── requirements.txt                 # Dependencies
+├── .gitignore                      # Git ignore file ✅
+├── .streamlit/
+│   ├── secrets.toml                # Your secrets (NOT in git) ✅
+│   └── secrets.toml.example        # Example template
+└── README.md                       # Documentation
+```
+
+## 🧪 Testing Checklist
+
+- [ ] Virtual environment activated
+- [ ] All packages installed
+- [ ] `.streamlit/secrets.toml` created with your credentials
+- [ ] `.streamlit/secrets.toml` is in `.gitignore`
+- [ ] App starts without errors: `streamlit run main_app.py`
+- [ ] Telegram test button works (✅ success message)
+- [ ] No credentials visible in your GitHub repository
+
+## 🔒 Security Checklist
+
+- [ ] No API keys in any `.py` files
+- [ ] `.streamlit/secrets.toml` in `.gitignore`
+- [ ] Secrets properly configured in Streamlit Cloud
+- [ ] Test Telegram connection works
+- [ ] Repository is clean of sensitive data
+
+## 🆘 Troubleshooting
+
+### "Telegram credentials not found"
+- Check `.streamlit/secrets.toml` exists
+- Verify the file format matches the example
+- Ensure no extra spaces or quotes
+
+### "Connection failed"
+- Test your bot token with @BotFather
+- Verify your chat ID is correct
+- Check internet connection
+
+### "Import errors"
+- Activate virtual environment: `source venv/bin/activate`
+- Install requirements: `pip install -r requirements.txt`
+
+## 🔄 Future Updates (Dhan API)
+
+When adding Dhan API:
+1. Add credentials to `[dhan]` section in secrets
+2. Create new module: `dhan_trading.py`
+3. Follow same security pattern
+4. Never commit API credentials to GitHub
