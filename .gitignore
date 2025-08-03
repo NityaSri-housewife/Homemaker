@@ -11,6 +11,8 @@ secrets.json
 config.json
 api_keys.txt
 credentials.txt
+.secrets
+secrets/
 
 # ===============================================
 # PYTHON
@@ -73,6 +75,8 @@ ENV/
 env.bak/
 venv.bak/
 .venv/
+trading_env/
+options_env/
 
 # ===============================================
 # STREAMLIT SPECIFIC
@@ -134,7 +138,7 @@ Thumbs.db
 Thumbs.db
 ehthumbs.db
 Desktop.ini
-$RECYCLE.BIN/
+$RECYCLE_BIN/
 *.cab
 *.msi
 *.msm
@@ -157,25 +161,33 @@ $RECYCLE.BIN/
 logs/
 temp/
 tmp/
+debug.log
+error.log
+app.log
 
 # ===============================================
-# DATA & OUTPUT FILES
+# TRADING & DATA FILES (SENSITIVE)
 # ===============================================
-# Trading data (sensitive)
+# Trading data files
 trades.csv
 portfolio.csv
 account_data.csv
 trading_history.csv
+positions.csv
+pnl_report.csv
 
-# Excel exports (may contain sensitive data)
+# Analysis exports (may contain sensitive data)
 nifty_analysis_*.xlsx
-trade_reports*.xlsx
+trade_reports_*.xlsx
 option_chain_*.csv
+market_data_*.csv
+analysis_*.json
 
 # Backup files
 *.bak
 *.backup
 *.old
+*_backup.*
 
 # ===============================================
 # DEVELOPMENT & TESTING
@@ -185,22 +197,90 @@ test_*.py
 *_test.py
 test/
 tests/
+testing/
 
-# Local development
+# Local development files
 local_config.py
 dev_settings.py
 debug.py
+sandbox.py
+playground.py
 
 # ===============================================
 # DOCUMENTATION BUILD
 # ===============================================
 docs/_build/
 site/
+_site/
+
+# ===============================================
+# DEPLOYMENT & DOCKER
+# ===============================================
+# Docker
+Dockerfile.local
+docker-compose.override.yml
+.dockerignore
+
+# Kubernetes
+*.local.yaml
+*.dev.yaml
 
 # ===============================================
 # CUSTOM PROJECT SPECIFIC
 # ===============================================
-# Add any project-specific files here
+# Screenshots and media
 screenshots/
+images/
+media/
+
+# Demo and sample data
 demo_data/
 sample_outputs/
+example_data/
+
+# User generated content
+user_data/
+downloads/
+exports/
+
+# Cache directories
+.cache/
+cache/
+__cache__/
+
+# Temporary analysis files
+temp_analysis/
+scratch/
+working/
+
+# ===============================================
+# TELEGRAM & COMMUNICATION
+# ===============================================
+# Telegram session files (if using Telethon/Pyrogram)
+*.session
+*.session-journal
+
+# Discord bot files
+discord_token.txt
+bot_config.json
+
+# ===============================================
+# FINANCIAL DATA PROVIDERS
+# ===============================================
+# NSE/BSE API sessions
+nse_session.pkl
+bse_session.pkl
+
+# Historical data downloads
+historical_data/
+market_data/
+option_data/
+
+# ===============================================
+# MISC
+# ===============================================
+# Ignore all hidden files except .gitignore and .gitkeep
+.*
+!.gitignore
+!.gitkeep
+!.github/
