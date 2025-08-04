@@ -135,7 +135,7 @@ def is_market_open():
     current_day = now.weekday()
     current_time = now.time()
     market_start = time(9, 0)
-    market_end = time(18, 40)
+    market_end = time(15, 40)
     
     return current_day < 5 and market_start <= current_time <= market_end
 
